@@ -11,13 +11,19 @@
 
 2. ダウンロードしたエクセルファイルをsimulator.pyと同じディレクトリ(フォルダ)に置きます。別のディレクトリに置きたい場合はread_excelのパスを適宜変更してください。
 
-```
-df = pd.read_excel('./05k2023-1.xlsx')
-```
-
 3. requirements.txtから必要なライブラリをインストールします。
 
+```
+pip install -r requirements.txt
+```
+
 4. 実行する事で100年間の人口推移を表したグラフが表示されます。
+
+```
+python simulator.py
+```
+
+あるいはJupyter Notebook等でインタラクティブに動かす方法もあります。
 
 ### シミュレーションに関係する設定について
 
