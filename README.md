@@ -33,8 +33,6 @@ df = pd.read_excel('./05k2023-1.xlsx')
 
 ## 連絡先
 
-X(Twitter):@Fall_in_the_web
-
-https://x.com/Fall_in_the_web
+X(Twitter):https://x.com/Fall_in_the_web
 
 Mail:util.round0@gmail.com
