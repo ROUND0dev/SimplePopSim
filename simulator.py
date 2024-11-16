@@ -4,15 +4,19 @@ import numpy as np
 import pandas as pd
 
 '''
-setting hyperparameters
+パラメータの設定値
 
 NUM_OF_GEN:シミュレーション年数
-PER_COST:高齢者1人あたりの社会保障費
 BIRTH_RATE:出生率
+PER_INSULANCE_PREMIUM:1人当たりの社会保険料負担額(万円)
+PER_TAX_SSC:1人当たりの税額のうち社会保障関係費に使われる額(万円)
+PER_SEN_SSC:高齢者1人当たりの社会保障給付額(万円)
 '''
 NUM_OF_GEN = 100
-PER_COST = 10
-BIRTH_RATE = 2.1
+BIRTH_RATE = 1.1
+PER_INSULANCE_PREMIUM = 20.4
+PER_TAX_SSC = 13.6
+PER_SEN_SSC = 230.4
 
 '''
 総務省統計局より公表されている
@@ -35,12 +39,29 @@ def birth(birth_rate, pop_mother):
   birth_pop_female = birth_pop - birth_pop_male
   return birth_pop_male, birth_pop_female
 
-def calc_ssc(pop, pop_act):
+def calc_ssc(pop):
   '''
   総人口popから65歳未満の人口pop_actを差し引きし、PER_COSTを乗じる事で社会保障費を計算
   '''
-  ssc = PER_COST * (pop - pop_act)
+  pop_senior = pop[65:]
+  ssc = PER_SEN_SSC * np.sum(pop_senior)
   return ssc
+
+def calc_rev(pop):
+  '''
+  社会保障関係費の歳入を計算
+  
+  insulance_rev:社会保険料の歳入
+  1人当たりの社会保険料を現役世代の人口で掛ける事で計算
+
+  tax_rev:税金
+  社会保障関係費に使われる1人当たりの税額に、成年人口を掛ける事で計算
+  '''
+  pop_insulance_rev = np.sum(pop[18:65])
+  pop_tax_rev = np.sum(pop[18:])
+  insulance_rev = PER_INSULANCE_PREMIUM * pop_insulance_rev
+  tax_rev = PER_TAX_SSC * pop_tax_rev
+  return insulance_rev + tax_rev
 
 def step(params):
   '''
@@ -104,6 +125,7 @@ def simulate_ssc(**kwargs):
   pop_list_male = kwargs.get('pop_list_male')
   pop_list_female = kwargs.get('pop_list_female')
   ssc_list = kwargs.get('ssc_list')
+  rev_list = kwargs.get('rev_list')
   birth_pop_list = kwargs.get('birth_pop_list')
 
   pop_m = [ float(e) for e in init_pop_male ]
@@ -127,8 +149,10 @@ def simulate_ssc(**kwargs):
     pop_list.append(list(pop))
     pop_list_male.append(list(pop_m))
     pop_list_female.append(list(pop_f))
-    ssc = calc_ssc(np.sum(pop), np.sum(pop[:65]))
+    ssc = calc_ssc(pop)
+    rev = calc_rev(pop)
     ssc_list.append(ssc)
+    rev_list.append(rev)
 
     birth_pop_list.append(birth_male + birth_female)
 
@@ -163,13 +187,14 @@ def main():
   rate_death_male, rate_death_female = create_rate_death(rate_death_male_5s, rate_death_female_5s)
 
   ssc_list = []
+  rev_list = []
   birth_pop_list = [ ]
   pop_list = [ init_pop_male + init_pop_female ]
   pop_list_male = [ init_pop_male ]
   pop_list_female = [ init_pop_female ]
   simulate_ssc(init_pop_male=init_pop_male, init_pop_female=init_pop_female, rate_death_male=rate_death_male
                ,rate_death_female=rate_death_female, pop_list=pop_list, pop_list_male=pop_list_male, pop_list_female=pop_list_female
-               ,ssc_list=ssc_list, birth_pop_list=birth_pop_list)
+               ,ssc_list=ssc_list, rev_list=rev_list, birth_pop_list=birth_pop_list)
   
   '''
   人口の推移をグラフで表示
@@ -179,6 +204,16 @@ def main():
   plt.xlabel("year")
   plt.ylabel("population")
   plt.plot(x, summarize_pop, label="population changes")
+  plt.legend()
+  plt.show()
+
+  '''
+  社会保障費の歳入と支出額の推移をグラフで表示
+  '''
+  plt.xlabel("year")
+  plt.ylabel("amount")
+  plt.plot(x, ssc_list, label="ssc")
+  plt.plot(x, rev_list, label="rev")
   plt.legend()
   plt.show()
 
